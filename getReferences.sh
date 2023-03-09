@@ -1,8 +1,7 @@
 #!/usr/bin
  
 #Download data of Mus Musculus version mm9
- 
-cd ~/HW1/references
+
 #Download the reference genome in FASTA format:
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M1/NCBIM37.genome.fa.gz -O /home/bioinformatikai/HW1/references/mm9.fa.gz
 
