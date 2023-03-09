@@ -10,7 +10,6 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M1/gencode.
 
 #Download GTF/GFF3 file for your reference genome:
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M1/gencode.vM1.annotation.gtf.gz -O /home/bioinformatikai/HW1/references/mm9.gtf.gz
-cd ~/HW1/inputs
 
 #Download raw FASTQ files:
 prefetch -O /home/bioinformatikai/HW1/inputs SRR8985047 SRR8985048 SRR8985051 SRR8985052
