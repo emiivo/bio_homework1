@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 
-#Run FASTQC analysis on each of your FASTQC files.
+# Check if index files exist and if it does not exist - create a reference genome index. 
+REFERENCE_DIR="/home/bioinformatikai/HW1/references"
+GENOME_FILE="${REFERENCE_DIR}/mm9.fa.gz"
+GENOME_UNZIPPED="${REFERENCE_DIR}/mm9.fa"
+GENOME_INDEX="${REFERENCE_DIR}/mm9"
+
+if [ ! -f "${GENOME_UNZIPPED}" ]; then
+    gunzip -c ${GENOME_FILE} > ${GENOME_UNZIPPED}
+fi
+
+# Create HISAT2 index if it doesn't exist
+if [ ! -f "${GENOME_INDEX}.1.ht2" ]; then
+    hisat2-build ${GENOME_UNZIPPED} ${GENOME_INDEX}
+fi
+
+
+# Run FASTQC analysis on each of your FASTQC files.
 fastqc /home/bioinformatikai/HW1/inputs/*.fastq.gz
 
-#Generate MULTIQC report for FASTQC analysis results.
+# Generate MULTIQC report for FASTQC analysis results.
 multiqc /home/bioinformatikai/HW1/inputs/ -o /home/bioinformatikai/HW1/inputs/
 
 # Run standard FASTQ trimming: remove adapters, trim low-quality bases as well as remove reads that are shorter than 20 bp. 
