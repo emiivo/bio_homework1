@@ -6,6 +6,7 @@ GENOME_FILE="${REFERENCE_DIR}/mm9.fa.gz"
 GENOME_UNZIPPED="${REFERENCE_DIR}/mm9.fa"
 GENOME_INDEX="${REFERENCE_DIR}/mm9"
 
+
 if [ ! -f "${GENOME_UNZIPPED}" ]; then
     gunzip -c ${GENOME_FILE} > ${GENOME_UNZIPPED}
 fi
@@ -34,10 +35,7 @@ FILES=(SRR8985047 SRR8985048 SRR8985051 SRR8985052)
 for file in "${FILES[@]}"
 do
   # Define input and output file names
-  INPUT1="${INPUT_DIR}/${file}_1.fastq.gz"
-  INPUT2="${INPUT_DIR}/${file}_2.fastq.gz"
-  OUTPUT1="${OUTPUT_DIR}/${file}_1_trimmed.fastq.gz"
-  OUTPUT2="${OUTPUT_DIR}/${file}_2_trimmed.fastq.gz"
+
 
   # Run trim_galore
   trim_galore --length 20 --paired ${INPUT1} ${INPUT2}
@@ -52,3 +50,15 @@ fastqc /home/bioinformatikai/HW1/outputs/*.fastq.gz
 
 #Create MultiQC plot for processed data
 multiqc /home/bioinformatikai/HW1/outputs/ -o /home/bioinformatikai/HW1/outputs/
+
+# Mapping using HISAT2
+for file in "${FILES[@]}"
+do
+  # Define input and output file names
+  OUTPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
+  INPUT_FILE_1="${OUTPUT_DIR}/${file}_1_trimmed.fastq.gz"
+  INPUT_FILE_2="${OUTPUT_DIR}/${file}_2_trimmed.fastq.gz"
+
+  # Run HISAT2
+  hisat2 ${nt} --dta -x "${GENOME_INDEX}" -1 "$INPUT_FILE_1" -2 "$INPUT_FILE_2" -S "$OUTPUT_SAM_FILE"
+done
