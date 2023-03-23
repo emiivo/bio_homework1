@@ -54,11 +54,18 @@ multiqc /home/bioinformatikai/HW1/outputs/ -o /home/bioinformatikai/HW1/outputs/
 # Mapping using HISAT2
 for file in "${FILES[@]}"
 do
-  # Define input and output file names
+  # Define input and output file names for hisat2
   OUTPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
   INPUT_FILE_1="${OUTPUT_DIR}/${file}_1_trimmed.fastq.gz"
   INPUT_FILE_2="${OUTPUT_DIR}/${file}_2_trimmed.fastq.gz"
 
   # Run HISAT2
-  hisat2 ${nt} --dta -x "${GENOME_INDEX}" -1 "$INPUT_FILE_1" -2 "$INPUT_FILE_2" -S "$OUTPUT_SAM_FILE"
+  hisat2 -p 6 --dta -x "${GENOME_INDEX}" -1 "$INPUT_FILE_1" -2 "$INPUT_FILE_2" -S "$OUTPUT_SAM_FILE"
+  
+  # Define input and output file names for samtools
+  INPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
+  OUTPUT_BAM_FILE="${OUTPUT_DIR}/${file}.bam"
+
+  # Convert SAM to BAM format
+  samtools view -@ 6 -F 0x4 -F 0x2 -bS "$INPUT_SAM_FILE" > "$OUTPUT_BAM_FILE"
 done
