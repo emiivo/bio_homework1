@@ -9,6 +9,7 @@ INPUT_DIR=/home/bioinformatikai/HW1/inputs
 OUTPUT_DIR=/home/bioinformatikai/HW1/outputs
 GTF_FILE="/home/bioinformatikai/HW1/references/mm9.gtf.gz"
 GTF_FILE_UNZIPPED="/home/bioinformatikai/HW1/references/mm9.gtf"
+FILES=(SRR8985047 SRR8985048 SRR8985051 SRR8985052)
 
 gunzip -c "${GTF_FILE}" > "${GTF_FILE_UNZIPPED}"
 
@@ -29,12 +30,7 @@ fastqc /home/bioinformatikai/HW1/inputs/*.fastq.gz
 multiqc /home/bioinformatikai/HW1/inputs/ -o /home/bioinformatikai/HW1/inputs/
 
 # Run standard FASTQ trimming: remove adapters, trim low-quality bases as well as remove reads that are shorter than 20 bp. 
-# Define input directory
 
-# Define input file names
-FILES=(SRR8985047 SRR8985048 SRR8985051 SRR8985052)
-
-# Loop through each file and perform trimming
 for file in "${FILES[@]}"
 do
   # Define input and output file names
@@ -60,19 +56,16 @@ multiqc /home/bioinformatikai/HW1/outputs/ -o /home/bioinformatikai/HW1/outputs/
 # Mapping using HISAT2
 for file in "${FILES[@]}"
 do
-  # Define input and output file names for hisat2
   OUTPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
   INPUT_FILE_1="${OUTPUT_DIR}/${file}_1_trimmed.fastq.gz"
   INPUT_FILE_2="${OUTPUT_DIR}/${file}_2_trimmed.fastq.gz"
+  INPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
+  OUTPUT_BAM_FILE="${OUTPUT_DIR}/${file}.bam"
 
   # Run HISAT2
   hisat2 -p 6 --dta -x "${GENOME_INDEX}" -1 "$INPUT_FILE_1" -2 "$INPUT_FILE_2" -S "$OUTPUT_SAM_FILE"
   
-  # Define input and output file names for samtools
-  INPUT_SAM_FILE="${OUTPUT_DIR}/${file}.sam"
-  OUTPUT_BAM_FILE="${OUTPUT_DIR}/${file}.bam"
-
-  # Convert SAM to BAM format
+  # Convert SAM to BAM format, remove unmapped reads as well as reads that are mapped incorrectly
   samtools view -@ 6 -F 0x4 -F 0x2 -bS "$INPUT_SAM_FILE" > "$OUTPUT_BAM_FILE"
 done
 
@@ -92,7 +85,7 @@ do
   samtools fixmate -m "${SORTED_BAM_FILE}" "${FIXED_BAM_FILE}"
   samtools sort "${FIXED_BAM_FILE}" -o "${SORTED_BAM_FILE_2}"
   samtools markdup -r "${SORTED_BAM_FILE_2}" "${DEDUPLICATED_BAM_FILE}"
-  Index the deduplicated BAM file
+  # Index the deduplicated BAM file
   samtools index -b "${DEDUPLICATED_BAM_FILE}" "${INDEX_FILE}"
   
   rm "${SORTED_BAM_FILE}" "${FIXED_BAM_FILE}"
@@ -105,7 +98,7 @@ done
 multiBamSummary bins --outFileName "${RESULTS_DIR}/mapped.npz" --binSize 1000 -p 6 --outRawCounts "${RESULTS_DIR}/raw_counts.tsv" -b "${OUTPUT_DIR}/SRR8985047_deduplicated.bam" "${OUTPUT_DIR}/SRR8985048_deduplicated.bam" "${OUTPUT_DIR}/SRR8985051_deduplicated.bam" "${OUTPUT_DIR}/SRR8985052_deduplicated.bam"
 
 # Generate the correlation plots
-plotCorrelation -in "${RESULTS_DIR}/mapped.npz" -c pearson -p heatmap -o "${RESULTS_DIR}/mapped_data_heatmap.pdf"
+plotCorrelation -in "${RESULTS_DIR}/mapped.npz"  --plotNumbers -c pearson -p heatmap -o "${RESULTS_DIR}/mapped_data_heatmap.pdf"
 plotCorrelation -in "${RESULTS_DIR}/mapped.npz" -c pearson -p scatterplot -o "${RESULTS_DIR}/mapped_data_scatterplot.pdf"
 
 # Generate the PCA plot
