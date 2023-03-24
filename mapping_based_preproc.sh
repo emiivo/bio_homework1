@@ -7,7 +7,10 @@ GENOME_UNZIPPED="${REFERENCE_DIR}/mm9.fa"
 GENOME_INDEX="${REFERENCE_DIR}/mm9"
 INPUT_DIR=/home/bioinformatikai/HW1/inputs
 OUTPUT_DIR=/home/bioinformatikai/HW1/outputs
+GTF_FILE="/home/bioinformatikai/HW1/references/mm9.gtf.gz"
+GTF_FILE_UNZIPPED="/home/bioinformatikai/HW1/references/mm9.gtf"
 
+gunzip -c "${GTF_FILE}" > "${GTF_FILE_UNZIPPED}"
 
 if [ ! -f "${GENOME_UNZIPPED}" ]; then
     gunzip -c ${GENOME_FILE} > ${GENOME_UNZIPPED}
@@ -91,6 +94,19 @@ do
   samtools markdup -r "${SORTED_BAM_FILE_2}" "${DEDUPLICATED_BAM_FILE}"
   Index the deduplicated BAM file
   samtools index -b "${DEDUPLICATED_BAM_FILE}" "${INDEX_FILE}"
+  
+  rm "${SORTED_BAM_FILE}" "${FIXED_BAM_FILE}"
+  
+  # Run StringTie
+  stringtie -G "${GTF_FILE_UNZIPPED}" -o "${OUTPUT_DIR}/${file}.gtf" "${SORTED_BAM_FILE_2}"
 
-  rm "${SORTED_BAM_FILE}" "${SORTED_BAM_FILE_2}" "${FIXED_BAM_FILE}"
 done
+# Run multiBamSummary
+multiBamSummary bins --outFileName "${RESULTS_DIR}/mapped.npz" --binSize 1000 -p 6 --outRawCounts "${RESULTS_DIR}/raw_counts.tsv" -b "${OUTPUT_DIR}/SRR8985047_deduplicated.bam" "${OUTPUT_DIR}/SRR8985048_deduplicated.bam" "${OUTPUT_DIR}/SRR8985051_deduplicated.bam" "${OUTPUT_DIR}/SRR8985052_deduplicated.bam"
+
+# Generate the correlation plots
+plotCorrelation -in "${RESULTS_DIR}/mapped.npz" -c pearson -p heatmap -o "${RESULTS_DIR}/mapped_data_heatmap.pdf"
+plotCorrelation -in "${RESULTS_DIR}/mapped.npz" -c pearson -p scatterplot -o "${RESULTS_DIR}/mapped_data_scatterplot.pdf"
+
+# Generate the PCA plot
+plotPCA -in "${RESULTS_DIR}/mapped.npz" -o "${RESULTS_DIR}/mapped_data_PCA.pdf"
