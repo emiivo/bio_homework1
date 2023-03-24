@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin
 
 # Check if index files exist and if it does not exist - create a reference genome index. 
 REFERENCE_DIR="/home/bioinformatikai/HW1/references"
