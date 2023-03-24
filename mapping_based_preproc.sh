@@ -5,6 +5,8 @@ REFERENCE_DIR="/home/bioinformatikai/HW1/references"
 GENOME_FILE="${REFERENCE_DIR}/mm9.fa.gz"
 GENOME_UNZIPPED="${REFERENCE_DIR}/mm9.fa"
 GENOME_INDEX="${REFERENCE_DIR}/mm9"
+INPUT_DIR=/home/bioinformatikai/HW1/inputs
+OUTPUT_DIR=/home/bioinformatikai/HW1/outputs
 
 
 if [ ! -f "${GENOME_UNZIPPED}" ]; then
@@ -25,8 +27,6 @@ multiqc /home/bioinformatikai/HW1/inputs/ -o /home/bioinformatikai/HW1/inputs/
 
 # Run standard FASTQ trimming: remove adapters, trim low-quality bases as well as remove reads that are shorter than 20 bp. 
 # Define input directory
-INPUT_DIR=/home/bioinformatikai/HW1/inputs
-OUTPUT_DIR=/home/bioinformatikai/HW1/outputs
 
 # Define input file names
 FILES=(SRR8985047 SRR8985048 SRR8985051 SRR8985052)
@@ -35,7 +35,10 @@ FILES=(SRR8985047 SRR8985048 SRR8985051 SRR8985052)
 for file in "${FILES[@]}"
 do
   # Define input and output file names
-
+  INPUT1="${INPUT_DIR}/${file}_1.fastq.gz"
+  INPUT2="${INPUT_DIR}/${file}_2.fastq.gz"
+  OUTPUT1="${OUTPUT_DIR}/${file}_1_trimmed.fastq.gz"
+  OUTPUT2="${OUTPUT_DIR}/${file}_2_trimmed.fastq.gz"
 
   # Run trim_galore
   trim_galore --length 20 --paired ${INPUT1} ${INPUT2}
@@ -68,4 +71,26 @@ do
 
   # Convert SAM to BAM format
   samtools view -@ 6 -F 0x4 -F 0x2 -bS "$INPUT_SAM_FILE" > "$OUTPUT_BAM_FILE"
+done
+
+# Deduplicate and index BAM files
+for file in "${FILES[@]}"
+do
+  # Define input and output file names
+  INPUT_BAM_FILE="${OUTPUT_DIR}/${file}.bam"
+  SORTED_BAM_FILE="${OUTPUT_DIR}/${file}_sorted.bam"
+  DEDUPLICATED_BAM_FILE="${OUTPUT_DIR}/${file}_deduplicated.bam"
+  INDEX_FILE="${OUTPUT_DIR}/${file}_deduplicated.bam.bai"
+  FIXED_BAM_FILE="${OUTPUT_DIR}/${file}_fixed.bam"
+  SORTED_BAM_FILE_2="${OUTPUT_DIR}/${file}_sorted_2.bam"
+ 
+  
+  samtools sort -n "${INPUT_BAM_FILE}" -o "${SORTED_BAM_FILE}"
+  samtools fixmate -m "${SORTED_BAM_FILE}" "${FIXED_BAM_FILE}"
+  samtools sort "${FIXED_BAM_FILE}" -o "${SORTED_BAM_FILE_2}"
+  samtools markdup -r "${SORTED_BAM_FILE_2}" "${DEDUPLICATED_BAM_FILE}"
+  Index the deduplicated BAM file
+  samtools index -b "${DEDUPLICATED_BAM_FILE}" "${INDEX_FILE}"
+
+  rm "${SORTED_BAM_FILE}" "${SORTED_BAM_FILE_2}" "${FIXED_BAM_FILE}"
 done
