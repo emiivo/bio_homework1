@@ -69,6 +69,10 @@ do
   samtools view -@ 6 -F 0x4 -F 0x2 -bS "$INPUT_SAM_FILE" > "$OUTPUT_BAM_FILE"
 done
 
+
+# Delete the .sam files
+rm *.sam
+
 # Deduplicate and index BAM files
 for file in "${FILES[@]}"
 do
