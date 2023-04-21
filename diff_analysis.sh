@@ -3,6 +3,34 @@
 RESULTS_DIR=~/HW1/results
 OUTPUT_DIR=~/HW1/outputs
 
+# Run DESeq2 on the count matrix
+
+Rscript -e '
+library(DESeq2)
+counts <- read.table("~/HW1/outputs/correct_gene_count_matrix.tsv", header=TRUE)
+counts <- as.matrix(counts[,-1])
+
+# Load the non-mapping count data
+non_mapping_counts <- read.table("~/HW1/results/correct_non_mapping_counts.tsv", header=TRUE)
+non_mapping_counts <- as.matrix(non_mapping_counts[,-1])
+
+# Create a DESeqDataSet object
+design <- data.frame(condition=as.factor(c(rep("method1", 2), rep("method2", 2))))
+dds <- DESeqDataSetFromMatrix(countData=counts, colData=design, ~condition)
+
+# Perform differential gene expression analysis
+dds <- DESeq(dds)
+res <- results(dds)
+
+# Create a correlation matrix of individual samples based on the analysis method
+sample_corr <- cor(t(counts), method="pearson")
+colnames(sample_corr) <- rownames(sample_corr) <- colnames(counts)
+
+
+# Create a heatmap of the correlation matrix
+library(gplots)
+heatmap.2(sample_corr, dendrogram="none", trace="none", symm=TRUE, col=colorRampPalette(c("white", "blue"))(50))'
+
 Rscript -e '
 
 library(DESeq2)
